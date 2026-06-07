@@ -1,0 +1,29 @@
+# --- Large raw dataset & build artifacts (NEVER commit: exceed GitHub's 100MB limit) ---
+archive/
+archive.zip
+*.joblib
+mymoviedb.csv
+
+# The committed catalogue is data/movies.csv.gz (kept). Ignore any uncompressed dumps.
+data/*.csv
+!data/movies.csv.gz
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
+
+# --- Tooling / OS ---
+.DS_Store
+.streamlit/secrets.toml
+
+# --- Legacy Flask app (superseded by streamlit_app.py) ---
+app.py
+templates/
+static/
+Procfile
+__pycache__/
