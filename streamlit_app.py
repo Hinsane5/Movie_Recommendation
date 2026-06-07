@@ -70,8 +70,7 @@ def render_movie(movie: dict) -> None:
 st.title("🎬 Movie Finder")
 st.write(
     "Describe the movie you're in the mood for — plot, vibe, genre, anything — "
-    "and get the closest matches from ~45,000 films. No login, no deep learning, "
-    "just classical ML (TF-IDF + cosine similarity)."
+    "and get the closest matches."
 )
 
 if "query" not in st.session_state:
