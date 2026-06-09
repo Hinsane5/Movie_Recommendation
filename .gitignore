@@ -4,9 +4,13 @@ archive.zip
 *.joblib
 mymoviedb.csv
 
-# The committed catalogue is data/movies.csv.gz (kept). Ignore any uncompressed dumps.
+# The committed catalogue (data/movies.csv.gz) and the precomputed collaborative-filtering
+# neighbour table (data/cf_neighbors.csv.gz) are kept — the deployed app loads them at
+# runtime. Ignore any uncompressed dumps.
 data/*.csv
+data/*.csv.gz
 !data/movies.csv.gz
+!data/cf_neighbors.csv.gz
 
 # --- Python ---
 __pycache__/

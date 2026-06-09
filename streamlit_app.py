@@ -3,6 +3,11 @@
 Describe the kind of movie you want in plain English and the classical-ML engine in
 ``engine.py`` ranks ~45k movies (TMDB / MovieLens dataset) to match your intent.
 
+Two complementary recommenders work together:
+- **Content-based** (``engine.py``): TF-IDF matches your text to movie metadata.
+- **Collaborative filtering** (``collaborative.py``): "More like this" surfaces movies
+  that MovieLens users co-rated with a title you picked.
+
 Run locally:   streamlit run streamlit_app.py
 Deploy:        push to GitHub and point Streamlit Community Cloud at streamlit_app.py
 """
@@ -11,6 +16,7 @@ from __future__ import annotations
 
 import streamlit as st
 
+from collaborative import load_neighbor_index
 from engine import build_engine
 
 SAMPLE_QUERIES = [
@@ -34,7 +40,13 @@ def get_engine():
     return build_engine()
 
 
-def render_movie(movie: dict) -> None:
+@st.cache_resource(show_spinner=False)
+def get_neighbor_index():
+    """Load the precomputed collaborative-filtering neighbour table once."""
+    return load_neighbor_index()
+
+
+def render_movie(movie: dict, neighbor_index) -> None:
     with st.container(border=True):
         if movie["poster"]:
             st.image(movie["poster"], use_container_width=True)
@@ -64,6 +76,11 @@ def render_movie(movie: dict) -> None:
                 st.write(movie["overview"])
                 if movie["keywords"]:
                     st.caption(f"Keywords: {movie['keywords']}")
+        # Collaborative-filtering entry point: only offer it where we have neighbours.
+        if movie["id"] in neighbor_index:
+            if st.button("🎯 More like this", key=f"similar-{movie['id']}", use_container_width=True):
+                st.session_state.similar_to = {"id": movie["id"], "title": movie["title"]}
+                st.rerun()
 
 
 # ----------------------------------------------------------------------------- UI
@@ -97,20 +114,44 @@ query = st.text_area(
 
 search = st.button("🔍 Find movies", type="primary")
 
-# Load the model up front so the first search is instant.
+# Load the models up front so the first search is instant.
 engine = get_engine()
+neighbor_index = get_neighbor_index()
 
-if search or query:
+
+def render_grid(results: list[dict]) -> None:
+    columns_per_row = 4
+    for start in range(0, len(results), columns_per_row):
+        row = results[start : start + columns_per_row]
+        cols = st.columns(columns_per_row)
+        for col, movie in zip(cols, row):
+            with col:
+                render_movie(movie, neighbor_index)
+
+
+# --- Collaborative filtering: "More like this" takes priority over a text search. ---
+if st.session_state.get("similar_to"):
+    seed = st.session_state.similar_to
+    header, clear = st.columns([4, 1])
+    with header:
+        st.subheader(f"🎯 Because you liked *{seed['title']}*")
+        st.caption("Movies MovieLens users tended to rate similarly (collaborative filtering).")
+    with clear:
+        if st.button("← Back to search", use_container_width=True):
+            del st.session_state.similar_to
+            st.rerun()
+
+    similar = engine.similar(seed["id"], neighbor_index, limit=num_results)
+    if similar:
+        render_grid(similar)
+    else:
+        st.info("Not enough rating overlap to recommend similar titles for this one.")
+
+elif search or query:
     cleaned = query.strip()
     if len(cleaned) < 8:
         st.warning("Please describe the movie in at least 8 characters.")
     else:
         results = engine.recommend(cleaned, limit=num_results)
         st.subheader(f"Top {len(results)} matches")
-        columns_per_row = 4
-        for start in range(0, len(results), columns_per_row):
-            row = results[start : start + columns_per_row]
-            cols = st.columns(columns_per_row)
-            for col, movie in zip(cols, row):
-                with col:
-                    render_movie(movie)
+        render_grid(results)

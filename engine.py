@@ -174,6 +174,7 @@ class Engine:
     action_adventure_mask: np.ndarray
     weak_metadata_penalty: np.ndarray
     team_betrayal_mask: np.ndarray
+    id_index: dict[int, int]  # TMDB id -> row position, for collaborative-filtering lookups
 
     # ------------------------------------------------------------------ scoring
     def _concept_intent_score(self, query: str) -> np.ndarray:
@@ -256,9 +257,30 @@ class Engine:
         top_indexes = np.argsort(scores)[::-1][:limit]
         return [self._format(self.movies.iloc[idx], float(scores[idx])) for idx in top_indexes]
 
+    def lookup(self, tmdb_id: int, score: float = 0.0) -> dict[str, object] | None:
+        """Format a single movie by its TMDB id (used to render CF neighbours)."""
+        idx = self.id_index.get(int(tmdb_id))
+        if idx is None:
+            return None
+        return self._format(self.movies.iloc[idx], score)
+
+    def similar(self, tmdb_id: int, neighbor_index, limit: int = TOP_RESULTS) -> list[dict[str, object]]:
+        """Collaborative-filtering "more like this": movies users co-rated with ``tmdb_id``.
+
+        ``neighbor_index`` is a ``collaborative.NeighborIndex`` holding the precomputed
+        item-based CF neighbours. Similarity is surfaced as the card's ``match`` percentage.
+        """
+        results: list[dict[str, object]] = []
+        for neighbor_id, similarity in neighbor_index.similar(tmdb_id, limit=limit):
+            movie = self.lookup(neighbor_id, similarity)
+            if movie is not None:
+                results.append(movie)
+        return results
+
     @staticmethod
     def _format(row: pd.Series, score: float) -> dict[str, object]:
         return {
+            "id": int(row["id"]),
             "title": row["title"],
             "overview": row["overview"],
             "genre": row["Genre"] or "Unknown",
@@ -380,6 +402,7 @@ def build_engine(data_path: str | Path = DEFAULT_DATA_PATH) -> Engine:
     )
 
     movies = movies.drop(columns=["search_text"]).reset_index(drop=True)
+    id_index = {int(movie_id): pos for pos, movie_id in enumerate(movies["id"])}
 
     return Engine(
         movies=movies,
@@ -394,6 +417,7 @@ def build_engine(data_path: str | Path = DEFAULT_DATA_PATH) -> Engine:
         action_adventure_mask=action_adventure_mask,
         weak_metadata_penalty=weak_metadata_penalty,
         team_betrayal_mask=team_betrayal_mask,
+        id_index=id_index,
     )
 
 
