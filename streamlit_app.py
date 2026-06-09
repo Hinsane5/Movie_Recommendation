@@ -37,6 +37,9 @@ st.set_page_config(
 @st.cache_resource(show_spinner="Building the recommendation model (first load only)…")
 def get_engine():
     """Build the TF-IDF engine once and reuse it across reruns and sessions."""
+    # Bump this token whenever engine output shape changes, to invalidate the
+    # cached resource on deploy (e.g. when the "id" field was added for CF).
+    _cache_version = "cf-v1"
     return build_engine()
 
 
@@ -77,9 +80,10 @@ def render_movie(movie: dict, neighbor_index) -> None:
                 if movie["keywords"]:
                     st.caption(f"Keywords: {movie['keywords']}")
         # Collaborative-filtering entry point: only offer it where we have neighbours.
-        if movie["id"] in neighbor_index:
-            if st.button("🎯 More like this", key=f"similar-{movie['id']}", use_container_width=True):
-                st.session_state.similar_to = {"id": movie["id"], "title": movie["title"]}
+        movie_id = movie.get("id")
+        if movie_id is not None and movie_id in neighbor_index:
+            if st.button("🎯 More like this", key=f"similar-{movie_id}", use_container_width=True):
+                st.session_state.similar_to = {"id": movie_id, "title": movie["title"]}
                 st.rerun()
 
 
