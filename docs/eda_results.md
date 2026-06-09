@@ -16,6 +16,49 @@ Generated from the deployed artifacts:
 | Collaborative-filtering covered movies | 19,779 |
 | Collaborative-filtering coverage rate | 43.8% |
 
+## Text-Feature Coverage
+
+These are the fields the TF-IDF engine ranks on, so their coverage bounds how well any
+given movie can be matched. Overview, cast, and director are near-complete; tagline and
+keywords are sparser and lean more on the other signals.
+
+| Field | Coverage | Mean words |
+|---|---:|---:|
+| Overview | 98.4% | 55.1 |
+| Tagline | 45.1% | 8.5 |
+| Keywords | 68.8% | 7.4 |
+| Cast | 94.8% | 14.3 |
+| Director | 98.1% | 2.3 |
+
+## MovieLens User-Rating Coverage
+
+The MovieLens user-rating signal (a tie-breaker in ranking) is present for **20.0%**
+(9,024 of 45,197) of movies. The remaining titles fall back to TMDB rating/vote/popularity
+only.
+
+## Movies per Decade
+
+Catalogue is heavily weighted toward 2000s–2010s releases (~53% of all titles).
+
+| Decade | Count |
+|---|---:|
+| 1870s | 2 |
+| 1880s | 4 |
+| 1890s | 75 |
+| 1900s | 87 |
+| 1910s | 176 |
+| 1920s | 431 |
+| 1930s | 1,315 |
+| 1940s | 1,491 |
+| 1950s | 2,069 |
+| 1960s | 2,603 |
+| 1970s | 3,448 |
+| 1980s | 3,904 |
+| 1990s | 5,636 |
+| 2000s | 11,133 |
+| 2010s | 12,748 |
+| 2020s | 1 |
+
 ## Top Genres
 
 | Genre | Count |
