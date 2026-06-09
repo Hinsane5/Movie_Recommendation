@@ -71,7 +71,6 @@ def main() -> None:
     print("Movie catalogue EDA")
     print("===================")
     print(f"Movies: {len(movies):,}")
-    print(f"Columns: {len(movies.columns):,}")
     print(f"Release years: {int(valid_years.min())}-{int(valid_years.max())}")
     print(f"Poster coverage: {poster_coverage:.1%}")
     print(f"Collaborative-filtering covered movies: {cf_covered:,}")

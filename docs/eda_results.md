@@ -10,7 +10,6 @@ Generated from the deployed artifacts:
 | Metric | Result |
 |---|---:|
 | Movies | 45,197 |
-| Columns | 19 |
 | Release years | 1874-2020 |
 | Poster coverage | 99.2% |
 | Collaborative-filtering covered movies | 19,779 |
